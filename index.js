@@ -1,24 +1,21 @@
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 5000;
+const cors = require('cors');
+require('dotenv').config();
 
-const express = require('express')
-const app = express()
-const port = process.env.PORT || 4900;
-const cors = require('cors')
-require('dotenv').config()
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
-
-
-//middleware
+// Middleware
 const corsOption = {
-    origin: 'http://localhost:5173'
-}
+    origin: 'http://localhost:5173', // Update with your front-end domain in production
+};
 
-app.use(cors(corsOption))
-app.use(express.json())
+app.use(cors(corsOption));
+app.use(express.json());
 
-
-
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://sipbite4900:xjEjGdm56X5Xx2K8@cluster0.huqehxg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+// MongoDB connection URI
+const uri = `mongodb+srv://${process.env.USER_ID}:${process.env.USER_PASS}@cluster0.huqehxg.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -31,65 +28,90 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        // Connect the client to the server	(optional starting in v4.7)
-        // await client.connect();
+        // Ensure the client connects to the MongoDB server
+        await client.connect();
 
-        const productsCollection = client.db("sipbite4900").collection("products");
-        const chefsCollection = client.db("sipbite4900").collection("chefs");
-        const popularCollection = client.db("sipbite4900").collection("popular");
-        const recipesCollection = client.db("sipbite4900").collection("recipes");
+        const db = client.db("sipbite4900");
+        const productsCollection = db.collection("products");
+        const chefsCollection = db.collection("chefs");
+        const popularCollection = db.collection("popular");
+        const recipesCollection = db.collection("recipes");
 
-
-        //products collection 
+        // Products collection routes
         app.get('/products', async (req, res) => {
             const result = await productsCollection.find().toArray();
             res.send(result)
-        })
+        });
 
-        //chefs collection
+        app.post('/products', async (req, res) => {
+            try {
+                const productItem = req.body;
+                if (!productItem.title || !productItem.image || !productItem.price || !productItem.description) {
+                    return res.status(400).send({ error: 'Missing required fields' });
+                }
+                const result = await productsCollection.insertOne(productItem);
+                res.status(201).send(result);
+            } catch (error) {
+                res.status(500).send({ error: 'Failed to insert product', details: error.message });
+            }
+        });
+
+
+
+
+        // Other collections (chefs, popular, recipes)...
         app.get('/chefs', async (req, res) => {
-            const result = await chefsCollection.find().toArray();
-            res.send(result)
-        })
-        //popular collection 
+            try {
+                const result = await chefsCollection.find().toArray();
+                res.send(result);
+            } catch (error) {
+                console.error('Failed to fetch chefs:', error);
+                res.status(500).send({ error: 'Failed to fetch chefs' });
+            }
+        });
+
         app.get('/popular', async (req, res) => {
-            const result = await popularCollection.find().toArray();
-            res.send(result)
-        })
+            try {
+                const result = await popularCollection.find().toArray();
+                res.send(result);
+            } catch (error) {
+                console.error('Failed to fetch popular items:', error);
+                res.status(500).send({ error: 'Failed to fetch popular items' });
+            }
+        });
 
-        //recipes collection
         app.get('/recipes', async (req, res) => {
-            const result = await recipesCollection.find().toArray();
-            res.send(result)
-        })
+            try {
+                const result = await recipesCollection.find().toArray();
+                res.send(result);
+            } catch (error) {
+                console.error('Failed to fetch recipes:', error);
+                res.status(500).send({ error: 'Failed to fetch recipes' });
+            }
+        });
 
-
-
-
-
-
-
-
-
-
-
-        // Send a ping to confirm a successful connection
+        // Ping the database to confirm connection
         await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
-    } finally {
-        // Ensures that the client will close when you finish/error
-        // await client.close();
+        console.log("Pinged your deployment. Successfully connected to MongoDB!");
+    } catch (error) {
+        console.error('Failed to connect to MongoDB:', error);
+        process.exit(1); // Exit the process with failure
     }
 }
 run().catch(console.dir);
 
-
-
-
+// Basic route
 app.get('/', (req, res) => {
-    res.send('Hello Food World!')
-})
+    res.send('Hello Food World!');
+});
 
 app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
-})
+    console.log(`App listening on port ${port}`);
+});
+
+// Handle graceful shutdown
+process.on('SIGINT', async () => {
+    await client.close();
+    console.log("MongoDB client disconnected on app termination");
+    process.exit(0);
+});
