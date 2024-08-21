@@ -91,6 +91,9 @@ async function run() {
             }
         });
 
+
+
+        //Popular related section 
         app.get('/popular', async (req, res) => {
             try {
                 const result = await popularCollection.find().toArray();
@@ -100,6 +103,27 @@ async function run() {
                 res.status(500).send({ error: 'Failed to fetch popular items' });
             }
         });
+        app.get('/popular/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await popularCollection.findOne(query)
+            res.send(result);
+        })
+        app.patch('/popular/:id', async (req, res) => {
+            const item = req.body;
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    title: item.title,
+                    image: item.image,
+                    price: item.price,
+                    short_description: item.short_description
+                }
+            }
+            const result = await popularCollection.updateOne(filter, updateDoc);
+            res.send(result)
+        })
 
         app.get('/recipes', async (req, res) => {
             try {
