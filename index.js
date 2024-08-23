@@ -48,6 +48,20 @@ async function run() {
             const result = await productsCollection.findOne(query)
             res.send(result);
         })
+
+        app.post('/products', async (req, res) => {
+            try {
+                const productItem = req.body;
+                if (!productItem.title || !productItem.image || !productItem.price || !productItem.description) {
+                    return res.status(400).send({ error: 'Missing required fields' });
+                }
+                const result = await productsCollection.insertOne(productItem);
+                res.status(201).send(result);
+            } catch (error) {
+                res.status(500).send({ error: 'Failed to insert product', details: error.message });
+            }
+        });
+
         app.patch('/products/:id', async (req, res) => {
             const item = req.body;
             const id = req.params.id;
@@ -64,23 +78,17 @@ async function run() {
             res.send(result)
         })
 
-        app.post('/products', async (req, res) => {
-            try {
-                const productItem = req.body;
-                if (!productItem.title || !productItem.image || !productItem.price || !productItem.description) {
-                    return res.status(400).send({ error: 'Missing required fields' });
-                }
-                const result = await productsCollection.insertOne(productItem);
-                res.status(201).send(result);
-            } catch (error) {
-                res.status(500).send({ error: 'Failed to insert product', details: error.message });
-            }
-        });
-
+        app.delete('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await productsCollection.deleteOne(query);
+            res.send(result)
+        })
 
 
 
         // Other collections (chefs, popular, recipes)...
+        //Chefs collection section 
         app.get('/chefs', async (req, res) => {
             try {
                 const result = await chefsCollection.find().toArray();
@@ -90,6 +98,49 @@ async function run() {
                 res.status(500).send({ error: 'Failed to fetch chefs' });
             }
         });
+
+        app.get('/chefs/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await chefsCollection.findOne(query)
+            res.send(result);
+        })
+
+        app.post('/chefs', async (req, res) => {
+            try {
+                const recipeItem = req.body;
+                if (!recipeItem.title || !recipeItem.image || !recipeItem.price || !recipeItem.description) {
+                    return res.status(400).send({ error: 'Missing required fields' });
+                }
+                const result = await chefsCollection.insertOne(recipeItem);
+                res.status(201).send(result);
+            } catch (error) {
+                res.status(500).send({ error: 'Failed to insert recipe', details: error.message });
+            }
+        });
+
+        app.patch('/chefs/:id', async (req, res) => {
+            const item = req.body;
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    name: item.name,
+                    title: item.title,
+                    image: item.image,
+                    bio: item.bio
+                }
+            }
+            const result = await chefsCollection.updateOne(filter, updateDoc);
+            res.send(result)
+        })
+
+        app.delete('/chefs/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await chefsCollection.deleteOne(query);
+            res.send(result)
+        })
 
 
 
@@ -125,6 +176,7 @@ async function run() {
             res.send(result)
         })
 
+        //Recipes Section
         app.get('/recipes', async (req, res) => {
             try {
                 const result = await recipesCollection.find().toArray();
@@ -134,6 +186,49 @@ async function run() {
                 res.status(500).send({ error: 'Failed to fetch recipes' });
             }
         });
+
+        app.get('/recipes/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await recipesCollection.findOne(query)
+            res.send(result);
+        })
+
+        app.post('/recipes', async (req, res) => {
+            try {
+                const recipeItem = req.body;
+                if (!recipeItem.title || !recipeItem.image || !recipeItem.price || !recipeItem.description) {
+                    return res.status(400).send({ error: 'Missing required fields' });
+                }
+                const result = await recipesCollection.insertOne(recipeItem);
+                res.status(201).send(result);
+            } catch (error) {
+                res.status(500).send({ error: 'Failed to insert recipe', details: error.message });
+            }
+        });
+
+        app.patch('/recipes/:id', async (req, res) => {
+            const item = req.body;
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    title: item.title,
+                    image: item.image,
+                    ingredients: item.ingredients,
+                    recipe: item.recipe
+                }
+            }
+            const result = await recipesCollection.updateOne(filter, updateDoc);
+            res.send(result)
+        })
+
+        app.delete('/recipes/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await recipesCollection.deleteOne(query);
+            res.send(result)
+        })
 
         // Ping the database to confirm connection
         await client.db("admin").command({ ping: 1 });
