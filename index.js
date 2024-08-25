@@ -36,6 +36,7 @@ async function run() {
         const chefsCollection = db.collection("chefs");
         const popularCollection = db.collection("popular");
         const recipesCollection = db.collection("recipes");
+        const reviewsCollection = db.collection("reviews");
 
         // Products collection routes
         app.get('/products', async (req, res) => {
@@ -227,6 +228,58 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await recipesCollection.deleteOne(query);
+            res.send(result)
+        })
+
+        //Reviews Section 
+        app.get('/reviews', async (req, res) => {
+            try {
+                const result = await reviewsCollection.find().toArray();
+                res.send(result);
+            } catch (error) {
+                console.error('Failed to fetch reviews:', error);
+                res.status(500).send({ error: 'Failed to fetch reviews' });
+            }
+        });
+
+        app.get('/reviews/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await reviewsCollection.findOne(query)
+            res.send(result);
+        })
+
+        app.post('/reviews', async (req, res) => {
+            try {
+                const reviewItem = req.body;
+                if (!reviewItem.title || !reviewItem.image || !reviewItem.price || !reviewItem.description) {
+                    return res.status(400).send({ error: 'Missing required fields' });
+                }
+                const result = await reviewsCollection.insertOne(reviewItem);
+                res.status(201).send(result);
+            } catch (error) {
+                res.status(500).send({ error: 'Failed to insert review', details: error.message });
+            }
+        });
+
+        app.patch('/reviews/:id', async (req, res) => {
+            const item = req.body;
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    name: item.name,
+                    description: item.description,
+                }
+            }
+            const result = await reviewsCollection.updateOne(filter, updateDoc);
+            res.send(result)
+        })
+
+        app.delete('/reviews/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await reviewsCollection.deleteOne(query);
             res.send(result)
         })
 
