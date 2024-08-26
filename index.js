@@ -6,15 +6,8 @@ require('dotenv').config();
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
-// Middleware
-const corsOption = {
-    origin: [
-        'http://localhost:5173',
-        'https://sip-bite.web.app'
-    ]
-};
 
-    app.use(cors(corsOption));
+app.use(cors);
 app.use(express.json());
 
 // MongoDB connection URI
