@@ -8,10 +8,13 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 // Middleware
 const corsOption = {
-    origin: 'http://localhost:5173', // Update with your front-end domain in production
+    origin: [
+        'http://localhost:5173',
+        'https://sip-bite.web.app'
+    ]
 };
 
-app.use(cors(corsOption));
+    app.use(cors(corsOption));
 app.use(express.json());
 
 // MongoDB connection URI
